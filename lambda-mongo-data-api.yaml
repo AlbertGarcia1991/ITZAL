@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >-
+  This Lambda is invoked by API Gateway and queries MongoDB.
+Parameters:
+    PythonVersion:
+        Default: python3.6
+        Type: String
+    AccountId:
+        Default: 000000000000
+        Type: String
+    AWSRegion:
+        Default: eu-west-1
+        Type: String
+    LayerName:
+        Default: aws_mongo
+        Type: String
+    LayerVersion:
+        Default: 1
+        Type: String
+Globals:
+  Api:
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
+
+Resources:
+  lambdamongodataapi:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_crud_mongo_records.lambda_handler
+      Runtime: !Sub '${PythonVersion}'
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWSRegion}:${AccountId}:layer:${LayerName}:${LayerVersion}'
+      CodeUri: ../../package/lambda-mongo-data-api.zip
+      FunctionName: lambda-mongo-data-api-sam
+      Description: >-
+        This Lambda is invoked by API Gateway and queries MongoDB.
+      MemorySize: 128
+      Timeout: 3
+      Role: !Sub 'arn:aws:iam::${AccountId}:role/lambda-mongo-data-api'
+      Environment:
+        Variables:
+          environment: demo
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /visits/{resourceId}
+            Method: GET
+        PostResource:
+          Type: Api
+          Properties:
+            Path: /visits
+            Method: POST
+        PutResource:
+          Type: Api
+          Properties:
+            Path: /visits
+            Method: PUT
+        DeleteResource:
+          Type: Api
+          Properties:
+            Path: /visits/{resourceId}
+            Method: DELETE
